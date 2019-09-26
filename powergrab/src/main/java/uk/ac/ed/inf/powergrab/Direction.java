@@ -19,14 +19,14 @@ public enum Direction{
 	NW(315),
 	NNW(337.5);
 	
-	private final double value;
+	private final double angle;
 	
-	private Direction(double value) {
-        this.value = value;
+	private Direction(double angle) {
+        this.angle = angle;
 	}
 	
-	public double getValue() {
-		return value;
+	public double getAngle() {
+		return angle;
 	}
 	
 	
