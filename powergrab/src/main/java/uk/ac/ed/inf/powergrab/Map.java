@@ -1,5 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.beans.FeatureDescriptor;
 // Imports
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +14,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 
 public class Map {
@@ -104,30 +104,41 @@ public class Map {
 		return (f.getProperty("id")).getAsString();
 	}
 	
-	public void writeFlightPath(List<List<Double>> flightCoordinates) {
-		
-		List<Feature> newFeatures = new ArrayList<Feature>();
-		
-		newFeatures.addAll(features);
-		
-		Feature flightPathFeature;
-		
-		JsonObject geometry = new JsonObject();
-		
-		JsonArray coordsArray = new JsonArray();
-			
-		for(List<Double> currentPair : flightCoordinates) {
-			JsonArray currentCoords = new JsonArray();
-			
-			currentCoords.add(currentPair.get(0));
-			currentCoords.add(currentPair.get(1));
-			
-			coordsArray.add(currentCoords);
-		}
-		
-		geometry.addProperty("type", "LineString");
-		geometry.add("coordinates", coordsArray);
-	}
+	// TODO Implement write to JSON function
+	
+	
+//	public JsonObject writeFlightPath(List<List<Double>> flightCoordinates) {
+//		
+//		JsonObject featureCollection = new JsonObject();
+//		
+//		featureCollection.addProperty("type", "FeatureCollection");
+//		featureCollection.addProperty("date-generated", (FeatureCollection.fromJson(mapSource)).);
+//		
+//		
+//		
+////		JsonObject flightPathFeature = new JsonObject();
+////		
+////		JsonObject geometry = new JsonObject();
+////		
+////		JsonArray coordsArray = new JsonArray();
+////			
+////		for(List<Double> currentPair : flightCoordinates) {
+////			JsonArray currentCoords = new JsonArray();
+////			
+////			currentCoords.add(currentPair.get(0));
+////			currentCoords.add(currentPair.get(1));
+////			
+////			coordsArray.add(currentCoords);
+////		}
+////		
+////		geometry.addProperty("type", "LineString");
+////		geometry.add("coordinates", coordsArray);
+////		
+////		flightPathFeature.add("geometry", geometry);
+////		newFeatures.add(flightPathFeature);
+//		
+//		
+//	}
 	
 	
 	
