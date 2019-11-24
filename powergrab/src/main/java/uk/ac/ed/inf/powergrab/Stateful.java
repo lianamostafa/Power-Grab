@@ -1,9 +1,11 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.io.PrintWriter;
+
 public class Stateful extends Drone{
 
-	public Stateful(int day, int month, int year, double latitude, double longitude, int seedNum, Position position) {
-		super(day, month, year, latitude, longitude, seedNum, position);
+	public Stateful(String mapString, double latitude, double longitude, int seedNum, Position position, PrintWriter writer) {
+		super(mapString, latitude, longitude, seedNum, position, writer);
 	}
 	
 	public void Move() {

@@ -35,11 +35,20 @@ public class Position {
 		return new Position(new_latitude, new_longitude);
 	}
 	
-//	public boolean inRange(List<Double> nextCoords) {
-//		//TODO calculate euclidean distance between nextcoords and current lat/long
-//		//Remember that GeoJSON holds long first and then lat
-//		
-//	}
+	public boolean inRange(List<Double> nextCoords) {
+		
+		double nextLong = nextCoords.get(0);
+		double nextLat = nextCoords.get(1);
+		
+		double dist = Math.sqrt(((nextLong-longitude)*(nextLong-longitude))+((nextLat-latitude)*(nextLat-latitude)));
+		
+		if(dist <=0.00025) {
+			return true;
+		} else {
+			return false;
+		}
+		
+	}
 	
 	public boolean inPlayArea() {
 		

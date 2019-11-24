@@ -105,37 +105,35 @@ public class Map {
 	}
 	
 	// TODO Implement write to JSON function
-	
-	
-//	public JsonObject writeFlightPath(List<List<Double>> flightCoordinates) {
+//	
+//	
+//	public JsonObject writeFlightPath(List<Position> flightPath) {
 //		
 //		JsonObject featureCollection = new JsonObject();
 //		
 //		featureCollection.addProperty("type", "FeatureCollection");
 //		featureCollection.addProperty("date-generated", (FeatureCollection.fromJson(mapSource)).);
 //		
+//		JsonObject flightPathFeature = new JsonObject();
+//		JsonObject geometry = new JsonObject();
+//		JsonArray coordsArray = new JsonArray();
 //		
+//		for(Position currentPos : flightPath) {
+//			JsonArray currentCoords = new JsonArray();
+//			currentCoords.add(currentPos.longitude);
+//			currentCoords.add(currentPos.latitude);
+//			coordsArray.add(currentCoords);
+//		}
 //		
-////		JsonObject flightPathFeature = new JsonObject();
-////		
-////		JsonObject geometry = new JsonObject();
-////		
-////		JsonArray coordsArray = new JsonArray();
-////			
-////		for(List<Double> currentPair : flightCoordinates) {
-////			JsonArray currentCoords = new JsonArray();
-////			
-////			currentCoords.add(currentPair.get(0));
-////			currentCoords.add(currentPair.get(1));
-////			
-////			coordsArray.add(currentCoords);
-////		}
-////		
-////		geometry.addProperty("type", "LineString");
-////		geometry.add("coordinates", coordsArray);
-////		
-////		flightPathFeature.add("geometry", geometry);
-////		newFeatures.add(flightPathFeature);
+//		geometry.addProperty("type", "LineString");
+//		geometry.add("coordinates", coordsArray);
+//		
+//		flightPathFeature.add("geometry", geometry);
+//		
+//		for(Feature feature : features) {
+//			featureCollection.add("features", feature);;
+//		}
+//		
 //		
 //		
 //	}
