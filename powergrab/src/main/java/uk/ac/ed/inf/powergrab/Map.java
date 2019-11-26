@@ -1,17 +1,18 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.beans.FeatureDescriptor;
 // Imports
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.*;
-import java.util.ArrayList;
 import java.util.List;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import org.json.simple.JSONArray; 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
@@ -107,36 +108,51 @@ public class Map {
 	// TODO Implement write to JSON function
 //	
 //	
-//	public JsonObject writeFlightPath(List<Position> flightPath) {
-//		
-//		JsonObject featureCollection = new JsonObject();
-//		
-//		featureCollection.addProperty("type", "FeatureCollection");
-//		featureCollection.addProperty("date-generated", (FeatureCollection.fromJson(mapSource)).);
-//		
-//		JsonObject flightPathFeature = new JsonObject();
-//		JsonObject geometry = new JsonObject();
-//		JsonArray coordsArray = new JsonArray();
-//		
-//		for(Position currentPos : flightPath) {
-//			JsonArray currentCoords = new JsonArray();
-//			currentCoords.add(currentPos.longitude);
-//			currentCoords.add(currentPos.latitude);
-//			coordsArray.add(currentCoords);
-//		}
-//		
-//		geometry.addProperty("type", "LineString");
-//		geometry.add("coordinates", coordsArray);
-//		
-//		flightPathFeature.add("geometry", geometry);
-//		
-//		for(Feature feature : features) {
-//			featureCollection.add("features", feature);;
-//		}
-//		
-//		
-//		
-//	}
+	public void writeFlightPath(List<Position> flightPath, String fileName) {
+		
+		JSONObject newJSON = new JSONObject();
+		JSONParser parser = new JSONParser();
+		JSONArray featuresArray = new JSONArray();
+		JSONObject newFeature = new JSONObject();
+		try {
+			
+			newJSON = (JSONObject) parser.parse(mapSource);
+			featuresArray = (JSONArray) newJSON.get("features");
+			
+			newFeature = new JSONObject();
+			
+			newFeature.put("type", "Feature");
+			newFeature.put("properties", new JSONArray());
+			
+			JSONObject geometry = new JSONObject();
+			JSONArray totalCoords = new JSONArray();
+			geometry.put("type", "LineString");
+			
+			for(Position currentPos : flightPath) {
+				JSONArray currentCoords = new JSONArray();
+				currentCoords.add(currentPos.longitude);
+				currentCoords.add(currentPos.latitude);
+				totalCoords.add(currentCoords);
+				
+			}
+			
+			geometry.put("coordinates", totalCoords);
+			newFeature.put("geomtery", geometry);
+			featuresArray.add(newFeature);
+			
+			newJSON.put("features", featuresArray);
+			
+		} catch (ParseException e) {
+			System.out.print("features array not found from source");
+		}
+		
+		try(PrintWriter jsonFile = new PrintWriter(fileName+".geojson")){
+			jsonFile.write(newJSON.toJSONString());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	
+	}
 	
 	
 	

@@ -1,7 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 
 public class App {
 	
@@ -13,7 +12,7 @@ public class App {
         double startingLat = Double.parseDouble(args[3]);
         double startingLong = Double.parseDouble(args[4]);
         int seedNum = Integer.parseInt(args[5]);
-        String droneType = args[6];
+        String droneType = args[6].toLowerCase();
         
     	Position position = new Position(startingLat, startingLong);
     	
@@ -33,19 +32,24 @@ public class App {
     	}
     	
     	String fileName = createFileString(year, month, day, droneType);
-    	PrintWriter writer = new PrintWriter(fileName);
+    	String mapString = createMapString(year, month, day);
     	
-        
-        
+    	if(droneType.equals("stateless")) {
+        	new Stateless(mapString, startingLat, startingLong, seedNum, position, fileName);
+    	} else {
+        	new Stateful(mapString, startingLat, startingLong, seedNum, position, fileName);
+    	}
+    	
+    	System.out.print("Program complete");
         
     }
     
-    public String createMapString(int year, int month, int day) {
+    public static String createMapString(int year, int month, int day) {
     	return String.format("http://homepages.inf.ed.ac.uk/stg/powergrab/%d/%d/%d/powergrabmap.geojson", year, month, day);
     }
     
     public static String createFileString(int year, int month, int day, String droneType) {
-    	return String.format("%s-%d-%d-%d.txt", droneType.toLowerCase(), day, month, year);
+    	return String.format("%s-%d-%d-%d", droneType.toLowerCase(), day, month, year);
 
     }
 }

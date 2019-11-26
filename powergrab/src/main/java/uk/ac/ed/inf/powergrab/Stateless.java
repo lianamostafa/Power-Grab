@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import com.mapbox.geojson.Feature;
-import java.io.PrintWriter;
 
 public class Stateless extends Drone {
 	
@@ -15,8 +14,8 @@ public class Stateless extends Drone {
 	private Map map;
 	public List<Position> totalMoves = new ArrayList<Position>();
 
-	public Stateless(String mapString, double latitude, double longitude, int seedNum, Position position, PrintWriter writer) {
-		super(mapString, latitude, longitude, seedNum, position, writer);
+	public Stateless(String mapString, double latitude, double longitude, int seedNum, Position position, String fileName) {
+		super(mapString, latitude, longitude, seedNum, position, fileName);
 		rdg = new RandomDirectionGenerator(seedNum);
 		map = new Map(mapString);
 	}
@@ -33,8 +32,8 @@ public class Stateless extends Drone {
 			HashMap<Direction, Feature> dangerDirections = new HashMap<Direction, Feature>();
 			
 			//Write latitude and longitude to the file
-			writer.print(position.latitude + " ");
-			writer.print(position.longitude + " ");
+			txtWriter.print(position.latitude + " ");
+			txtWriter.print(position.longitude + " ");
 			
 			for(int i = 0; i < directions.size(); i++) {
 				
@@ -77,27 +76,27 @@ public class Stateless extends Drone {
 			Position bestPosition = position.nextPosition((Direction) best[0]);
 			
 			// Write direction of move to the file
-			writer.print(best[0] + " ");
+			txtWriter.print(best[0] + " ");
 			
 			// Set our latitude and longitude to match those found in out bestPosition
 			position.latitude = bestPosition.latitude;
 			position.longitude = bestPosition.longitude;
 			
 			// Write new latitude and longitude to the file
-			writer.print(position.latitude + " ");
-			writer.print(position.longitude + " ");
+			txtWriter.print(position.latitude + " ");
+			txtWriter.print(position.longitude + " ");
 			
 			battery.consumeBattery(1.25);
 			battery.chargeBattery(map.getPower(bestFeature));
 			coins.addCoins(map.getCoins(bestFeature));
 			
 			// Write new value of coins after move to file
-			writer.print(map.getCoins(bestFeature) + " ");
+			txtWriter.print(map.getCoins(bestFeature) + " ");
 			
 			// Write new value of battery after move to file
-			writer.print(map.getPower(bestFeature) + " ");
+			txtWriter.print(map.getPower(bestFeature) + " ");
 			// Print new line on file 
-			writer.println("");
+			txtWriter.println("");
 			
 			// Add new position to totalMoves
 			totalMoves.add(position);
