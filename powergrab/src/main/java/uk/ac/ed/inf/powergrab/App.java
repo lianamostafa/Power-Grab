@@ -41,6 +41,8 @@ public class App {
 	    	if(droneType.equals("stateless")) {
 	        	Stateless drone = new Stateless(mapString, startingLat, startingLong, seedNum, position, fileName);
 	        	drone.Move();
+	        	System.out.println("\nTotal coins: " + drone.coins.getCoins());
+	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	    	} else {
 	        	new Stateful(mapString, startingLat, startingLong, seedNum, position, fileName);
 	    	}

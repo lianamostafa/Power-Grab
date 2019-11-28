@@ -25,6 +25,7 @@ public class Stateless {
 	public Battery battery = new Battery();
 	public Coins coins = new Coins();
 	public Map map;
+	public RandomDirectionGenerator rdg;
 	
 	public List<Feature> visitedStations = new ArrayList<>();
 	
@@ -44,7 +45,7 @@ public class Stateless {
 			e.printStackTrace();
 		}
 		
-		
+		rdg  = new RandomDirectionGenerator(seedNum);
 
 	}
 	
@@ -53,11 +54,12 @@ public class Stateless {
 		// Add base position to flightPath
 		flightPath.add(new Position(position.latitude, position.longitude));
 		Direction[] directions = Direction.values();
+
 		
 		while(count <= 250 && battery.getCharge() >= 1.25) {
 			
 			HashMap<Direction, Feature> validDirections = new HashMap<Direction, Feature>();
-			HashMap<Direction, Feature> dangerDirections = new HashMap<Direction, Feature>();
+			List<Direction> illegalDirections = new ArrayList<>();
 			
 			//Write latitude and longitude to the file
 			txtWriter.print(position.latitude + " ");
@@ -69,12 +71,9 @@ public class Stateless {
 				Position next = position.nextPosition(d);
 				
 				if(!next.inPlayArea()) {
+					illegalDirections.add(d);
 					continue;
 				}
-				
-				Double closestDist = null;
-				String closestMarker = null;
-				Feature closestFeature = null;
 				
 				for(Feature f : map.features) {
 					
@@ -82,55 +81,20 @@ public class Stateless {
 						break;
 					}
 					
-					Double currentDist = next.getDist(map.getCoordinates(f));
-					
-					if(currentDist != null) {
-						String currentMarker = map.getMarkerSymbol(f);
-						if(closestDist == null && closestMarker == null) {
-							closestDist = currentDist; 
-							closestMarker = currentMarker;
-							closestFeature = f;
-							continue;
-						}
-						
-						if(currentDist < closestDist) {
-							closestDist = currentDist;
-							closestMarker = currentMarker;
-							closestFeature = f;
-						} else if(currentDist == closestDist) {
-							if(closestMarker.equals("danger")) {
-								closestDist = currentDist;
-								closestMarker = currentMarker;
-								closestFeature = f;
-							}
+					if(next.inRange(map.getCoordinates(f))) {
+						if(map.getMarkerSymbol(f).equals("lighthouse")) {
+							validDirections.put(d, f);
+							break;
+						} else {
+							illegalDirections.add(d);
+							break;
 						}
 					}
-					
 				}
-				
-				if(closestMarker != null) {
-					if(closestMarker.equals("lighthouse")) {
-						validDirections.put(d, closestFeature);
-					} else if(closestMarker.equals("danger")) {
-						dangerDirections.put(d, closestFeature);
-					}
-				}
-
-				if(!(dangerDirections.containsKey(d)) && !(validDirections.containsKey(d))) {
-					validDirections.put(d, null);
-				}
-				
 			}
 			
-			Object[] bestMove;
-			
-			if(!validDirections.isEmpty()) {
-				System.out.println(count);
-				bestMove = bestDirection(validDirections);
-			} else {
-				System.out.println(count);
-				bestMove = bestDirection(dangerDirections);
-			}
+			System.out.println(count);
+			Object[] bestMove = bestDirection(validDirections, illegalDirections);
 			
 			Feature bestFeature = (Feature) bestMove[1];
 			Position bestPosition = position.nextPosition((Direction) bestMove[0]);
@@ -177,57 +141,74 @@ public class Stateless {
 		map.writeFlightPath(flightPath, fileName);
 	}
 	
-	public Object[] bestDirection(HashMap<Direction, Feature> moves) {
-		Set<Direction> dirKeySet = moves.keySet();
-		List<Direction> dirKeyList = new ArrayList<>(dirKeySet);
+	public Object[] bestDirection(HashMap<Direction, Feature> moves, List<Direction> illegalDirections) {
+		System.out.println("I die here");
+		if(count == 36) {
+			System.out.println(moves);
+
+		}
 		
-		if(count == 24 || count == 25 || count == 26) {
-			for(Direction d : dirKeyList) {
-				System.out.println(d);
+		Direction bestDirection;
+		Object[] result = new Object[2];
+		
+		
+		if(!moves.entrySet().isEmpty()) {
+			
+			Set<Direction> dirKeySet = moves.keySet();
+			List<Direction> dirKeyList = new ArrayList<>(dirKeySet);
+			
+			if(count == 24 || count == 25 || count == 26) {
+				for(Direction d : dirKeyList) {
+					System.out.println(d);
+				}
 			}
-		}
-		
-		RandomDirectionGenerator rdg  = new RandomDirectionGenerator(seedNum, dirKeyList);
-		
-		double bestCoins = 0;
-		double bestPower = 0;
-		
-		if(moves.get(dirKeyList.get(0)) != null) {
-			bestCoins = map.getCoins(moves.get(dirKeyList.get(0)));
-			bestPower = map.getPower(moves.get(dirKeyList.get(0)));
-		}
-		
-		Direction bestDirection = dirKeyList.get(0);
-		
-		if(moves.size() > 1) {
-			for(int i = 1; i < moves.size(); i++) {
-				Feature currentFeature = moves.get(dirKeyList.get(i));
-				if(currentFeature != null) {
-					double currentCoins = map.getCoins(currentFeature);
-					double currentPower = map.getPower(currentFeature);
-					
-					if(battery.getCharge() < 20) {
-						if(currentPower > bestPower) {
+			
+			double bestCoins = map.getCoins(moves.get(dirKeyList.get(0)));
+			double bestPower = map.getPower(moves.get(dirKeyList.get(0)));
+
+			bestDirection = dirKeyList.get(0);
+			
+
+			if(moves.size() > 1) {
+				for(int i = 1; i < moves.size(); i++) {
+					Feature currentFeature = moves.get(dirKeyList.get(i));
+					if(currentFeature != null) {
+						double currentCoins = map.getCoins(currentFeature);
+						double currentPower = map.getPower(currentFeature);
+						
+						if(battery.getCharge() < 20) {
+							if(currentPower > bestPower) {
+								bestCoins = currentCoins;
+								bestPower = currentPower;
+								bestDirection = dirKeyList.get(i);
+							}
+						} else if(currentCoins > bestCoins) {
 							bestCoins = currentCoins;
 							bestPower = currentPower;
 							bestDirection = dirKeyList.get(i);
 						}
-					} else if(currentCoins > bestCoins) {
-						bestCoins = currentCoins;
-						bestPower = currentPower;
-						bestDirection = dirKeyList.get(i);
 					}
 				}
 			}
-		}
-		
-		if(bestCoins == 0) {
+			
+			result[0] = bestDirection;
+			result[1] = moves.get(bestDirection);
+			
+		} else {
 			bestDirection = rdg.getRandomDirection();
+			if(illegalDirections.contains(bestDirection)) {
+				while(illegalDirections.contains(bestDirection)) {
+					bestDirection = rdg.getRandomDirection();
+				}
+			}
+			result[0] = bestDirection;
+			result[1] = null;
 		}
+
 		
 		System.out.println("Best direction is: " + bestDirection);
 		System.out.println("__________________");
-		Object[] result = {bestDirection, moves.get(bestDirection)};	
+			
 		return result;
 	}
 }

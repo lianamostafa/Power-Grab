@@ -35,7 +35,7 @@ public class Position {
 		return new Position(new_latitude, new_longitude);
 	}
 	
-	public Double getDist(List<Double> nextCoords) {
+	public boolean inRange(List<Double> nextCoords) {
 		
 		double nextLong = nextCoords.get(0);
 		double nextLat = nextCoords.get(1);
@@ -43,9 +43,9 @@ public class Position {
 		double dist = Math.sqrt(((nextLong-longitude)*(nextLong-longitude))+((nextLat-latitude)*(nextLat-latitude)));
 
 		if(dist <= 0.00025) {
-			return dist;
+			return true;
 		} else {
-			return null;
+			return false;
 		}
 		
 	}

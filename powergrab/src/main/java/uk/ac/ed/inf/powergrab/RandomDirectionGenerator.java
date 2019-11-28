@@ -1,21 +1,18 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class RandomDirectionGenerator {
-	private List<Direction> directionsList;
 	private Random rnd;
 	
-	public RandomDirectionGenerator(int seedNumber, List<Direction> directionsList) {
-		this.directionsList = directionsList;
+	public RandomDirectionGenerator(int seedNumber) {
 		rnd = new Random(seedNumber);
 	}
 	
 	public Direction getRandomDirection(){
-		int i = rnd.nextInt(directionsList.size());
-		return directionsList.get(i);
+		int i = rnd.nextInt(16);
+		System.out.println(i);
+		return Direction.values()[i];
 
 	}
 	
