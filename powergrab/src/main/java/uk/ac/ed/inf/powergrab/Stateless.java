@@ -1,33 +1,61 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import com.mapbox.geojson.Feature;
 
-public class Stateless extends Drone {
+public class Stateless {
 	
 	// Current number of moves implemented (MAX 250)
 	private int count;
-	private RandomDirectionGenerator rdg;
-	private Map map;
-	public List<Position> totalMoves = new ArrayList<Position>();
-
+	public int seedNum;
+	public double latitude;
+	public double longitude;
+	
+	public String mapString;
+	public String fileName;
+	public PrintWriter txtWriter;
+	
+	public Position position;
+	public List<Position> flightPath = new ArrayList<>();
+	public Battery battery = new Battery();
+	public Coins coins = new Coins();
+	public Map map;
+	
+	public List<Feature> visitedStations = new ArrayList<>();
+	
 	public Stateless(String mapString, double latitude, double longitude, int seedNum, Position position, String fileName) {
-		super(mapString, latitude, longitude, seedNum, position, fileName);
-		rdg = new RandomDirectionGenerator(seedNum);
+		this.mapString = mapString;
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.seedNum = seedNum;
+		this.position = position;
+		this.fileName = fileName;
+		
 		map = new Map(mapString);
+		
+		try {
+			txtWriter = new PrintWriter(fileName+".txt");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		
+
 	}
 	
 	public void Move() {
 		
-		// Add base position to totalMoves
-		totalMoves.add(position);
+		// Add base position to flightPath
+		flightPath.add(new Position(position.latitude, position.longitude));
+		Direction[] directions = Direction.values();
 		
-		while(count < 250 && battery.getCharge() >= 1.25) {
+		while(count <= 250 && battery.getCharge() >= 1.25) {
 			
-			List<Direction> directions = rdg.getRandomDirections();
 			HashMap<Direction, Feature> validDirections = new HashMap<Direction, Feature>();
 			HashMap<Direction, Feature> dangerDirections = new HashMap<Direction, Feature>();
 			
@@ -35,48 +63,80 @@ public class Stateless extends Drone {
 			txtWriter.print(position.latitude + " ");
 			txtWriter.print(position.longitude + " ");
 			
-			for(int i = 0; i < directions.size(); i++) {
+			for(int i = 0; i < 16; i++) {
 				
-				Direction d = directions.get(i);
+				Direction d = directions[i];
 				Position next = position.nextPosition(d);
-				boolean isDanger = false;
 				
 				if(!next.inPlayArea()) {
 					continue;
 				}
+				
+				Double closestDist = null;
+				String closestMarker = null;
+				Feature closestFeature = null;
+				
 				for(Feature f : map.features) {
-					// Check if feature is in range
-					if(next.inRange(map.getCoordinates(f))) {
-						if(map.getMarkerColour(f) == "lighthouse") {
-							validDirections.put(d, f);
-							break;
-						} else {
-							isDanger = true;
-							dangerDirections.put(d, f);
-							break;
+					
+					if(visitedStations.contains(f)) {
+						break;
+					}
+					
+					Double currentDist = next.getDist(map.getCoordinates(f));
+					
+					if(currentDist != null) {
+						String currentMarker = map.getMarkerSymbol(f);
+						if(closestDist == null && closestMarker == null) {
+							closestDist = currentDist; 
+							closestMarker = currentMarker;
+							closestFeature = f;
+							continue;
+						}
+						
+						if(currentDist < closestDist) {
+							closestDist = currentDist;
+							closestMarker = currentMarker;
+							closestFeature = f;
+						} else if(currentDist == closestDist) {
+							if(closestMarker.equals("danger")) {
+								closestDist = currentDist;
+								closestMarker = currentMarker;
+								closestFeature = f;
+							}
 						}
 					}
+					
 				}
 				
-				if(isDanger != true && !validDirections.containsKey(d)) {
-					validDirections.put(d, null);
+				if(closestMarker != null) {
+					if(closestMarker.equals("lighthouse")) {
+						validDirections.put(d, closestFeature);
+					} else if(closestMarker.equals("danger")) {
+						dangerDirections.put(d, closestFeature);
+					}
 				}
 
+				if(!(dangerDirections.containsKey(d)) && !(validDirections.containsKey(d))) {
+					validDirections.put(d, null);
+				}
+				
 			}
 			
-			Object[] best;
+			Object[] bestMove;
 			
-			if(!validDirections.equals(null)) {
-				best = bestDirection(validDirections);
+			if(!validDirections.isEmpty()) {
+				System.out.println(count);
+				bestMove = bestDirection(validDirections);
 			} else {
-				best = bestDirection(dangerDirections);
+				System.out.println(count);
+				bestMove = bestDirection(dangerDirections);
 			}
 			
-			Feature bestFeature = (Feature) best[1];
-			Position bestPosition = position.nextPosition((Direction) best[0]);
+			Feature bestFeature = (Feature) bestMove[1];
+			Position bestPosition = position.nextPosition((Direction) bestMove[0]);
 			
 			// Write direction of move to the file
-			txtWriter.print(best[0] + " ");
+			txtWriter.print(bestMove[0] + " ");
 			
 			// Set our latitude and longitude to match those found in out bestPosition
 			position.latitude = bestPosition.latitude;
@@ -87,68 +147,87 @@ public class Stateless extends Drone {
 			txtWriter.print(position.longitude + " ");
 			
 			battery.consumeBattery(1.25);
-			battery.chargeBattery(map.getPower(bestFeature));
-			coins.addCoins(map.getCoins(bestFeature));
 			
+			if(bestFeature != null) {
+				battery.chargeBattery(map.getPower(bestFeature));
+				coins.addCoins(map.getCoins(bestFeature));
+				visitedStations.add(bestFeature);
+				int bestFeatureIndex = map.features.indexOf(bestFeature);
+				map.features.get(bestFeatureIndex).removeProperty("coins");
+				map.features.get(bestFeatureIndex).removeProperty("power");
+				map.features.get(bestFeatureIndex).addNumberProperty("coins", 0.0);
+				map.features.get(bestFeatureIndex).addNumberProperty("power", 0.0);
+			}
+
 			// Write new value of coins after move to file
-			txtWriter.print(map.getCoins(bestFeature) + " ");
+			txtWriter.print(coins.getCoins() + " ");
 			
 			// Write new value of battery after move to file
-			txtWriter.print(map.getPower(bestFeature) + " ");
+			txtWriter.print(battery.getCharge() + " ");
 			// Print new line on file 
 			txtWriter.println("");
 			
-			// Add new position to totalMoves
-			totalMoves.add(position);
+			
+			// Add new position to flightPath
+			flightPath.add(new Position(position.latitude, position.longitude));
 			
 			count++;	
 			
-		}
-		
+		}	
+		map.writeFlightPath(flightPath, fileName);
 	}
 	
-	public Object[] bestDirection(HashMap<Direction, Feature> directions) {
+	public Object[] bestDirection(HashMap<Direction, Feature> moves) {
+		Set<Direction> dirKeySet = moves.keySet();
+		List<Direction> dirKeyList = new ArrayList<>(dirKeySet);
 		
-		Set<Direction> keySet = directions.keySet();
-		Direction[] keyArr = (Direction[]) keySet.toArray();
+		if(count == 24 || count == 25 || count == 26) {
+			for(Direction d : dirKeyList) {
+				System.out.println(d);
+			}
+		}
 		
-		double bestCoins = map.getCoins(directions.get(keyArr[0]));
-		double bestPower = map.getPower(directions.get(keyArr[0]));
+		RandomDirectionGenerator rdg  = new RandomDirectionGenerator(seedNum, dirKeyList);
 		
-		Direction bestDirection = keyArr[0];
+		double bestCoins = 0;
+		double bestPower = 0;
 		
-		if(directions.size() > 1) {
-			for(int i = 1; i < directions.size(); i++) {
-				Feature current = directions.get(keyArr[i]);
-				if(current != null) {
-					double currentCoins = map.getCoins(current);
-					double currentPower = map.getPower(current);
+		if(moves.get(dirKeyList.get(0)) != null) {
+			bestCoins = map.getCoins(moves.get(dirKeyList.get(0)));
+			bestPower = map.getPower(moves.get(dirKeyList.get(0)));
+		}
+		
+		Direction bestDirection = dirKeyList.get(0);
+		
+		if(moves.size() > 1) {
+			for(int i = 1; i < moves.size(); i++) {
+				Feature currentFeature = moves.get(dirKeyList.get(i));
+				if(currentFeature != null) {
+					double currentCoins = map.getCoins(currentFeature);
+					double currentPower = map.getPower(currentFeature);
 					
 					if(battery.getCharge() < 20) {
 						if(currentPower > bestPower) {
 							bestCoins = currentCoins;
 							bestPower = currentPower;
-							bestDirection = keyArr[i];
+							bestDirection = dirKeyList.get(i);
 						}
-					} else if(coins.getCoins() < 400) {
-						if(currentCoins > bestCoins) {
-							bestCoins = currentCoins;
-							bestPower = currentPower;
-							bestDirection = keyArr[i];
-						}
-					} else if(currentPower > bestPower || currentCoins > bestCoins) {
+					} else if(currentCoins > bestCoins) {
 						bestCoins = currentCoins;
 						bestPower = currentPower;
-						bestDirection = keyArr[i];
+						bestDirection = dirKeyList.get(i);
 					}
 				}
 			}
 		}
 		
-		Object[] result = {bestDirection, directions.get(bestDirection)};	
+		if(bestCoins == 0) {
+			bestDirection = rdg.getRandomDirection();
+		}
+		
+		System.out.println("Best direction is: " + bestDirection);
+		System.out.println("__________________");
+		Object[] result = {bestDirection, moves.get(bestDirection)};	
 		return result;
 	}
-	
-	
-
 }

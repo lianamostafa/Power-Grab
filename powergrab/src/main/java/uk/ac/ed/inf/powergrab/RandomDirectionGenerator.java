@@ -5,26 +5,18 @@ import java.util.List;
 import java.util.Random;
 
 public class RandomDirectionGenerator {
-	private int seedNumber;
+	private List<Direction> directionsList;
 	private Random rnd;
 	
-	public RandomDirectionGenerator(int seedNumber) {
-		this.seedNumber = seedNumber;
-	}
-	
-	public List<Direction> getRandomDirections(){
-		
+	public RandomDirectionGenerator(int seedNumber, List<Direction> directionsList) {
+		this.directionsList = directionsList;
 		rnd = new Random(seedNumber);
-		
-		List<Direction> randDirections= new ArrayList<>();
-		
-		for(int i = 0; i < 16; i++) {
-			int currentRand = rnd.nextInt(16);
-			randDirections.add(Direction.values()[currentRand]);
-		}
-		
-		return randDirections;
 	}
 	
+	public Direction getRandomDirection(){
+		int i = rnd.nextInt(directionsList.size());
+		return directionsList.get(i);
+
+	}
 	
 }

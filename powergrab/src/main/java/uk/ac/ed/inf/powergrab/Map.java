@@ -9,6 +9,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.*;
 import java.util.List;
+
+import javax.annotation.processing.Generated;
+
 import org.json.simple.JSONArray; 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -26,7 +29,6 @@ public class Map {
 	
 	// Set up our connection and get our list of features using GeoJson
 	public Map(String mapString) {
-		
 		conn = mapConn(mapString);
 		
 		try {
@@ -46,7 +48,7 @@ public class Map {
 		} catch (MalformedURLException e) {
 			System.out.printf("URL: %s is invalid \n", mapString);
 		}
-	
+		
 		try {
 			conn = (HttpURLConnection) mapURL.openConnection();
 		} catch (java.io.IOException e){
@@ -64,14 +66,15 @@ public class Map {
 		 * String Builder output.
 		 */
 		
-		StringBuilder output = new StringBuilder();
-		BufferedReader current = new BufferedReader(new InputStreamReader(is));
-		
+		InputStreamReader isr = new InputStreamReader(is);
+		StringBuffer output = new StringBuffer();
+		BufferedReader current = new BufferedReader(isr);
+		String currentSTR;
+	
 		try {
-			while(current.readLine() != null) {
-				output.append(current.readLine());
+			while((currentSTR = current.readLine()) != null) {
+				output.append(currentSTR);
 			}
-			current.close();
 		} catch (IOException e) {
 			System.out.println("Cannot connect to server");
 		}
@@ -86,6 +89,11 @@ public class Map {
 	}
 	
 	public Float getCoins(Feature f) {
+		
+		if(f.getProperty("coins") == null) {
+			throw new NullPointerException("Feature " + f + " does not exist.");
+			
+		}
 		return (f.getProperty("coins")).getAsFloat();
 	}
 	
@@ -105,42 +113,66 @@ public class Map {
 		return (f.getProperty("id")).getAsString();
 	}
 	
-	// TODO Implement write to JSON function
-//	
-//	
+
 	public void writeFlightPath(List<Position> flightPath, String fileName) {
 		
 		JSONObject newJSON = new JSONObject();
 		JSONParser parser = new JSONParser();
-		JSONArray featuresArray = new JSONArray();
+		JSONObject oldJSON = new JSONObject();
+		
+		JSONArray allFeatures = new JSONArray();
+		
 		JSONObject newFeature = new JSONObject();
+		JSONObject geometry = new JSONObject();
+		JSONArray totalCoords = new JSONArray();
+		
 		try {
 			
-			newJSON = (JSONObject) parser.parse(mapSource);
-			featuresArray = (JSONArray) newJSON.get("features");
+			oldJSON = (JSONObject) parser.parse(mapSource);
 			
-			newFeature = new JSONObject();
+			newJSON.put("type", "FeatureCollection");
+			newJSON.put("date-generated", oldJSON.get("date-generated"));
 			
-			newFeature.put("type", "Feature");
-			newFeature.put("properties", new JSONArray());
-			
-			JSONObject geometry = new JSONObject();
-			JSONArray totalCoords = new JSONArray();
-			geometry.put("type", "LineString");
+			for(Feature f : features) {
+				JSONObject currentFeature = new JSONObject();
+				currentFeature.put("type", "Feature");
+				
+				JSONObject currentProperties = new JSONObject();
+				currentProperties.put("id", getID(f));
+				currentProperties.put("coins", getCoins(f));
+				currentProperties.put("power", getPower(f));
+				currentProperties.put("marker-symbol", getMarkerSymbol(f));
+				currentProperties.put("marker-color", getMarkerColour(f));
+				currentFeature.put("properties", currentProperties);
+				
+				JSONObject currentGeometry = new JSONObject();
+				currentGeometry.put("type", "Point");
+				JSONArray currentCoords = new JSONArray();
+				currentCoords.add(getCoordinates(f).get(0));
+				currentCoords.add(getCoordinates(f).get(1));
+				currentGeometry.put("coordinates", currentCoords);
+				currentFeature.put("geometry", currentGeometry);
+				
+				allFeatures.add(currentFeature);
+				
+ 			}
 			
 			for(Position currentPos : flightPath) {
 				JSONArray currentCoords = new JSONArray();
 				currentCoords.add(currentPos.longitude);
 				currentCoords.add(currentPos.latitude);
 				totalCoords.add(currentCoords);
-				
 			}
 			
+			geometry.put("type", "LineString");
 			geometry.put("coordinates", totalCoords);
-			newFeature.put("geomtery", geometry);
-			featuresArray.add(newFeature);
 			
-			newJSON.put("features", featuresArray);
+			newFeature.put("type", "Feature");
+			newFeature.put("properties", new JSONArray());
+			newFeature.put("geometry", geometry);
+			
+			allFeatures.add(newFeature);
+			newJSON.put("features", allFeatures);
 			
 		} catch (ParseException e) {
 			System.out.print("features array not found from source");

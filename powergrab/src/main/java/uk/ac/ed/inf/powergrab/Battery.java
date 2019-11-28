@@ -10,11 +10,7 @@ public class Battery {
 	 */
 	
 	public void chargeBattery(double amount) {
-		if(amount + charge > 250.0) {
-			charge = 250.0;
-		} else {
-			charge += amount;
-		}
+		charge += amount;
 	}
 	
 	/* I have decided to take a similar approach with discharging the battery
@@ -22,11 +18,7 @@ public class Battery {
 	 */
 	
 	public void consumeBattery(double amount) {
-		if(charge - amount < 0) {
-			charge = 0.0;
-		} else {
-			charge -= amount;
-		}
+		charge -= amount;
 	}
 	
 	public double getCharge() {
