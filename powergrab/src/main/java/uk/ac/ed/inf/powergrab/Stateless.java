@@ -26,8 +26,7 @@ public class Stateless {
 	public Coins coins = new Coins();
 	public Map map;
 	public RandomDirectionGenerator rdg;
-	
-	public List<Feature> visitedStations = new ArrayList<>();
+
 	
 	public Stateless(String mapString, double latitude, double longitude, int seedNum, Position position, String fileName) {
 		this.mapString = mapString;
@@ -75,10 +74,10 @@ public class Stateless {
 					continue;
 				}
 				
-				for(Feature f : map.features) {
-					
-					if(visitedStations.contains(f)) {
-						break;
+				for(Feature f : map.features){
+
+					if(map.getPower(f) == 0.0 && map.getCoins(f) == 0.0) {
+						continue;
 					}
 					
 					if(next.inRange(map.getCoordinates(f))) {
@@ -92,8 +91,6 @@ public class Stateless {
 					}
 				}
 			}
-			
-			System.out.println(count);
 			Object[] bestMove = bestDirection(validDirections, illegalDirections);
 			
 			Feature bestFeature = (Feature) bestMove[1];
@@ -115,7 +112,6 @@ public class Stateless {
 			if(bestFeature != null) {
 				battery.chargeBattery(map.getPower(bestFeature));
 				coins.addCoins(map.getCoins(bestFeature));
-				visitedStations.add(bestFeature);
 				int bestFeatureIndex = map.features.indexOf(bestFeature);
 				map.features.get(bestFeatureIndex).removeProperty("coins");
 				map.features.get(bestFeatureIndex).removeProperty("power");
@@ -138,15 +134,11 @@ public class Stateless {
 			count++;	
 			
 		}	
+
 		map.writeFlightPath(flightPath, fileName);
 	}
 	
 	public Object[] bestDirection(HashMap<Direction, Feature> moves, List<Direction> illegalDirections) {
-		System.out.println("I die here");
-		if(count == 36) {
-			System.out.println(moves);
-
-		}
 		
 		Direction bestDirection;
 		Object[] result = new Object[2];
@@ -156,12 +148,6 @@ public class Stateless {
 			
 			Set<Direction> dirKeySet = moves.keySet();
 			List<Direction> dirKeyList = new ArrayList<>(dirKeySet);
-			
-			if(count == 24 || count == 25 || count == 26) {
-				for(Direction d : dirKeyList) {
-					System.out.println(d);
-				}
-			}
 			
 			double bestCoins = map.getCoins(moves.get(dirKeyList.get(0)));
 			double bestPower = map.getPower(moves.get(dirKeyList.get(0)));
@@ -195,6 +181,7 @@ public class Stateless {
 			result[1] = moves.get(bestDirection);
 			
 		} else {
+			
 			bestDirection = rdg.getRandomDirection();
 			if(illegalDirections.contains(bestDirection)) {
 				while(illegalDirections.contains(bestDirection)) {
@@ -204,10 +191,6 @@ public class Stateless {
 			result[0] = bestDirection;
 			result[1] = null;
 		}
-
-		
-		System.out.println("Best direction is: " + bestDirection);
-		System.out.println("__________________");
 			
 		return result;
 	}

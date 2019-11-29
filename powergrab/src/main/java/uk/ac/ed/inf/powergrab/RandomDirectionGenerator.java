@@ -11,7 +11,6 @@ public class RandomDirectionGenerator {
 	
 	public Direction getRandomDirection(){
 		int i = rnd.nextInt(16);
-		System.out.println(i);
 		return Direction.values()[i];
 
 	}

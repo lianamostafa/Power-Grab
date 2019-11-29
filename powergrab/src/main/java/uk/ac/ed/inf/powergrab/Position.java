@@ -15,7 +15,8 @@ public class Position {
 	public Position nextPosition(Direction direction) {
 		
 		double r = 0.0003;
-		double direction_angle = direction.getAngle();
+		// I used 90 - direction_angle for the angle as I had set North to 0 in my direction enum
+		double direction_angle = 90 - direction.getAngle();
 		double new_latitude = 0;
 		double new_longitude = 0;
 		
@@ -25,12 +26,11 @@ public class Position {
 		 * before being added to the old longitude and latitude
 		 */
 		
-		/* I used 90 - direction_angle for the angle as I had set North to 0 in my direction enum
-		 * The angles were then converted to radians
+		/*  The angles were then converted to radians
 		 */
 		
-		new_longitude = longitude + r*(Math.cos(Math.toRadians(90-direction_angle)));
-		new_latitude = latitude + r*(Math.sin(Math.toRadians(90-direction_angle)));
+		new_longitude = longitude + r*(Math.cos(Math.toRadians(direction_angle)));
+		new_latitude = latitude + r*(Math.sin(Math.toRadians(direction_angle)));
 		
 		return new Position(new_latitude, new_longitude);
 	}
@@ -41,7 +41,7 @@ public class Position {
 		double nextLat = nextCoords.get(1);
 
 		double dist = Math.sqrt(((nextLong-longitude)*(nextLong-longitude))+((nextLat-latitude)*(nextLat-latitude)));
-
+		
 		if(dist <= 0.00025) {
 			return true;
 		} else {

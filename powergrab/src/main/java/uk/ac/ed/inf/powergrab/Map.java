@@ -1,6 +1,5 @@
 package uk.ac.ed.inf.powergrab;
 
-// Imports
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.*;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import javax.annotation.processing.Generated;
 
@@ -38,7 +38,6 @@ public class Map {
 		}
 		
 		features = (FeatureCollection.fromJson(mapSource)).features();
-		
 	}
 	
 	// Create a connection labelled 'conn' from a given URL
@@ -154,6 +153,7 @@ public class Map {
 				currentFeature.put("geometry", currentGeometry);
 				
 				allFeatures.add(currentFeature);
+				
 				
  			}
 			
