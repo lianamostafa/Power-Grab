@@ -80,7 +80,7 @@ public class Stateless {
 						continue;
 					}
 					
-					if(next.inRange(map.getCoordinates(f))) {
+					if(next.inRange(next.getDist(map.getCoordinates(f)))) {
 						if(map.getMarkerSymbol(f).equals("lighthouse")) {
 							validDirections.put(d, f);
 							break;
@@ -149,30 +149,28 @@ public class Stateless {
 			Set<Direction> dirKeySet = moves.keySet();
 			List<Direction> dirKeyList = new ArrayList<>(dirKeySet);
 			
-			double bestCoins = map.getCoins(moves.get(dirKeyList.get(0)));
-			double bestPower = map.getPower(moves.get(dirKeyList.get(0)));
-
 			bestDirection = dirKeyList.get(0);
-			
+			Feature bestFeature = moves.get(bestDirection);
+			double bestCoins = map.getCoins(bestFeature);
+			double bestPower = map.getPower(bestFeature);
 
-			if(moves.size() > 1) {
-				for(int i = 1; i < moves.size(); i++) {
-					Feature currentFeature = moves.get(dirKeyList.get(i));
-					if(currentFeature != null) {
-						double currentCoins = map.getCoins(currentFeature);
-						double currentPower = map.getPower(currentFeature);
-						
-						if(battery.getCharge() < 20) {
-							if(currentPower > bestPower) {
-								bestCoins = currentCoins;
-								bestPower = currentPower;
-								bestDirection = dirKeyList.get(i);
-							}
-						} else if(currentCoins > bestCoins) {
+			for(int i = 1; i < moves.size(); i++) {
+				Direction currentDirection = dirKeyList.get(i);
+				Feature currentFeature = moves.get(currentDirection);
+				if(currentFeature != null) {
+					double currentCoins = map.getCoins(currentFeature);
+					double currentPower = map.getPower(currentFeature);
+					
+					if(battery.getCharge() < 20) {
+						if(currentPower > bestPower) {
 							bestCoins = currentCoins;
 							bestPower = currentPower;
-							bestDirection = dirKeyList.get(i);
+							bestDirection = currentDirection;
 						}
+					} else if(currentCoins > bestCoins) {
+						bestCoins = currentCoins;
+						bestPower = currentPower;
+						bestDirection = currentDirection;
 					}
 				}
 			}

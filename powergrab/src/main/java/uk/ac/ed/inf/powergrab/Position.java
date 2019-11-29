@@ -35,19 +35,21 @@ public class Position {
 		return new Position(new_latitude, new_longitude);
 	}
 	
-	public boolean inRange(List<Double> nextCoords) {
-		
+	// Function to get the Euclidean distance between the current position and a feature
+	public double getDist(List<Double> nextCoords) {
 		double nextLong = nextCoords.get(0);
 		double nextLat = nextCoords.get(1);
-
 		double dist = Math.sqrt(((nextLong-longitude)*(nextLong-longitude))+((nextLat-latitude)*(nextLat-latitude)));
-		
+		return dist;
+	}
+	
+	// Function to check if the current position is in range of a feature
+	public boolean inRange(Double dist) {
 		if(dist <= 0.00025) {
 			return true;
 		} else {
 			return false;
 		}
-		
 	}
 	
 	public boolean inPlayArea() {
