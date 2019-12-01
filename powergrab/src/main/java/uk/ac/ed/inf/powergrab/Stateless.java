@@ -11,7 +11,7 @@ import com.mapbox.geojson.Feature;
 public class Stateless {
 	
 	// Current number of moves implemented (MAX 250)
-	private int count;
+	private int count = 0;
 	public int seedNum;
 	public double latitude;
 	public double longitude;
@@ -64,9 +64,8 @@ public class Stateless {
 			txtWriter.print(position.latitude + " ");
 			txtWriter.print(position.longitude + " ");
 			
-			for(int i = 0; i < 16; i++) {
+			for(Direction d : directions) {
 				
-				Direction d = directions[i];
 				Position next = position.nextPosition(d);
 				
 				if(!next.inPlayArea()) {
@@ -91,6 +90,7 @@ public class Stateless {
 					}
 				}
 			}
+			
 			Object[] bestMove = bestDirection(validDirections, illegalDirections);
 			
 			Feature bestFeature = (Feature) bestMove[1];

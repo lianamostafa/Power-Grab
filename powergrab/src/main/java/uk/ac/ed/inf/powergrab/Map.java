@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -26,6 +27,9 @@ public class Map {
 	private HttpURLConnection conn;
 	private String mapSource;
 	public List<Feature> features;
+	public List<Feature> goodFeatures = new ArrayList<>();;
+	public List<Feature> badFeatures = new ArrayList<>();;
+	
 	
 	// Set up our connection and get our list of features using GeoJson
 	public Map(String mapString) {
@@ -38,6 +42,14 @@ public class Map {
 		}
 		
 		features = (FeatureCollection.fromJson(mapSource)).features();
+
+		for(Feature f : features) {
+			if(getMarkerSymbol(f).equals("lighthouse")) {
+				goodFeatures.add(f);
+			} else {
+				badFeatures.add(f);
+			}
+		}
 	}
 	
 	// Create a connection labelled 'conn' from a given URL
@@ -111,7 +123,6 @@ public class Map {
 	public String getID(Feature f) {
 		return (f.getProperty("id")).getAsString();
 	}
-	
 
 	public void writeFlightPath(List<Position> flightPath, String fileName) {
 		
@@ -185,9 +196,4 @@ public class Map {
 		}
 	
 	}
-	
-	
-	
-	
-		
 }

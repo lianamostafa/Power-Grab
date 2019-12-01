@@ -43,7 +43,11 @@ public class App {
 	        	System.out.println("\nTotal coins: " + drone.coins.getCoins());
 	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	    	} else {
-	        	new Stateful(mapString, startingLat, startingLong, seedNum, position, fileName);
+	        	Stateful drone = new Stateful(mapString, startingLat, startingLong, seedNum, position, fileName);
+	        	drone.Move();
+	        	System.out.print("...Finished");
+	        	System.out.println("\nTotal coins: " + drone.coins.getCoins());
+	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	    	}
 	    	
 	    	
