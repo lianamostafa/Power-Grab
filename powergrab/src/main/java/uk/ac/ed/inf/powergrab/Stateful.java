@@ -7,13 +7,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.imageio.ImageTypeSpecifier;
+
 import com.mapbox.geojson.Feature;
 
 public class Stateful{
 	
 	// Current number of moves implemented (MAX 250)
-	private int count = 0;
-	public int seedNum;
+	private int count;
 	public double latitude;
 	public double longitude;
 	
@@ -27,12 +28,12 @@ public class Stateful{
 	public Map map;
 	
 	public List<Position> flightPath = new ArrayList<>();
+	public List<List<Double>> flightCoordinates = new ArrayList<>();
 
-	public Stateful(String mapString, double latitude, double longitude, int seedNum, Position position, String fileName) {
+	public Stateful(String mapString, double latitude, double longitude, Position position, String fileName) {
 		this.mapString = mapString;
 		this.latitude = latitude;
 		this.longitude = longitude;
-		this.seedNum = seedNum;
 		this.position = position;
 		this.fileName = fileName;
 		
@@ -54,19 +55,21 @@ public class Stateful{
 		while(count <= 250 && battery.getCharge() >= 1.25 && !map.goodFeatures.isEmpty()) {
 			
 			List<Direction> illegalDirections = new ArrayList<>();
+			HashMap<Direction, Double> distances = new HashMap<>();
+			
+			Feature closestFeature = getClosestFeature(map.goodFeatures);
+			Direction closestDirection = null;
+			boolean arrived = false;
 			
 			//Write latitude and longitude to the file
 			txtWriter.print(position.latitude + " ");
 			txtWriter.print(position.longitude + " ");
 			
-			Feature closestFeature = getClosestFeature(map.goodFeatures);
-			Direction closestDirection = null;
-	
-			HashMap<Direction, Double> distances = new HashMap<>();
-			
-			boolean arrived = false;
-			
 			while(!arrived) {
+				
+				if(count == 250) {
+					break;
+				}
 				
 				for(Direction currentDirection : directions) {
 					
@@ -77,6 +80,14 @@ public class Stateful{
 						illegalDirections.add(currentDirection);
 						continue;
 					}
+					
+					if(flightCoordinates.contains(next.getCoordinates())) {
+						illegalDirections.add(currentDirection);
+						if(distances.containsKey(currentDirection)) {
+							distances.remove(currentDirection);
+						}
+						continue;
+					}		
 					
 					for(Feature bf : map.badFeatures) {
 						if(next.inRange(next.getDist(map.getCoordinates(bf)))) {
@@ -89,10 +100,16 @@ public class Stateful{
 						distances.put(currentDirection, currentDistance);
 						
 						if(next.inRange(currentDistance) ) {
+							closestDirection = currentDirection;
 							map.goodFeatures.remove(closestFeature);
 							arrived = true;
+							break;
 						}
 					}
+				}
+				
+				if(arrived) {
+					break;
 				}
 				
 				Double closestDistance = Collections.min(distances.values());
@@ -105,6 +122,9 @@ public class Stateful{
 						break;
 					}
 				}
+				
+				illegalDirections = new ArrayList<>();
+				distances = new HashMap<>();
 				endMove(closestDirection);
 			}
 			
@@ -122,9 +142,9 @@ public class Stateful{
 		map.writeFlightPath(flightPath, fileName);
 	}
 	
-	// Helper function for everything we need to do once we have decided on a move
+	// Helper function for everything we need to do once we have decided on a move to make
 	public void endMove(Direction closestDirection) {
-		
+	
 		Position bestPosition = position.nextPosition(closestDirection);
 		
 		// Write direction of move to the file
@@ -150,7 +170,11 @@ public class Stateful{
 		
 		// Add new position to flightPath
 		flightPath.add(new Position(position.latitude, position.longitude));
-		System.out.println(count);
+		
+		// Add coordinates to flightCoordinates
+		flightCoordinates.add(new ArrayList<>(position.getCoordinates()));
+				
+		
 		count++;
 		
 	}
@@ -159,7 +183,7 @@ public class Stateful{
 		
 		HashMap<Feature, Double> distances = new HashMap<>();
 		
-		for(int i = 1; i < currentFeatures.size(); i++) {
+		for(int i = 0; i < currentFeatures.size(); i++) {
 			double currentDistance = position.getDist(map.getCoordinates(currentFeatures.get(i)));
 			Feature currentFeature = currentFeatures.get(i);
 			distances.put(currentFeature, currentDistance);
@@ -193,10 +217,14 @@ public class Stateful{
 			}
 			return bestFeature;
 		} else {
-			/* Otherwise just return the closest feature
-			 */
+			// Otherwise just return the closest feature
 			return closestFeatures.get(0);
 		}
 		
+	}
+	
+	// Getter for the value of count
+	public int getCount() {
+		return count;
 	}
 }

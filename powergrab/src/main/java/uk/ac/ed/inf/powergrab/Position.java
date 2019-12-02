@@ -1,5 +1,6 @@
 package uk.ac.ed.inf.powergrab;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Position {
@@ -50,6 +51,14 @@ public class Position {
 		} else {
 			return false;
 		}
+	}
+	
+	// Getter for the coordinates of the current position
+	public List<Double> getCoordinates(){
+		List<Double> coordinates = new ArrayList<>();
+		coordinates.add(longitude);
+		coordinates.add(latitude);
+		return coordinates;
 	}
 	
 	public boolean inPlayArea() {

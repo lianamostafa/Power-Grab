@@ -40,13 +40,16 @@ public class App {
 	        	Stateless drone = new Stateless(mapString, startingLat, startingLong, seedNum, position, fileName);
 	        	drone.Move();
 	        	System.out.print("...Finished");
-	        	System.out.println("\nTotal coins: " + drone.coins.getCoins());
+	        	System.out.println("\nTotal moves: " + drone.getCount());
+	        	System.out.println("Total coins: " + drone.coins.getCoins());
 	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	    	} else {
-	        	Stateful drone = new Stateful(mapString, startingLat, startingLong, seedNum, position, fileName);
+	    		// SeedNum is not necessary for this implementation of Stateful
+	        	Stateful drone = new Stateful(mapString, startingLat, startingLong, position, fileName);
 	        	drone.Move();
 	        	System.out.print("...Finished");
-	        	System.out.println("\nTotal coins: " + drone.coins.getCoins());
+	        	System.out.println("\nTotal moves: " + drone.getCount());
+	        	System.out.println("Total coins: " + drone.coins.getCoins());
 	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	    	}
 	    	

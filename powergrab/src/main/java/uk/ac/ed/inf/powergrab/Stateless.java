@@ -11,7 +11,7 @@ import com.mapbox.geojson.Feature;
 public class Stateless {
 	
 	// Current number of moves implemented (MAX 250)
-	private int count = 0;
+	private int count;
 	public int seedNum;
 	public double latitude;
 	public double longitude;
@@ -54,7 +54,6 @@ public class Stateless {
 		flightPath.add(new Position(position.latitude, position.longitude));
 		Direction[] directions = Direction.values();
 
-		
 		while(count <= 250 && battery.getCharge() >= 1.25) {
 			
 			HashMap<Direction, Feature> validDirections = new HashMap<Direction, Feature>();
@@ -134,15 +133,22 @@ public class Stateless {
 			count++;	
 			
 		}	
-
 		map.writeFlightPath(flightPath, fileName);
 	}
+	
+	/* 
+	 * Best direction takes in a HashMap of the current options for valid directions (with their corresponding features),
+	 * and decides which direction is the best to go for (in terms of feature value).
+	 * 
+	 * If the current list of valid directions have no features associated with them,
+	 * a random direction out of the 16 possible is then chosen 
+	 * (making sure that said direction does not appear on our list of illegal directions).
+	 */
 	
 	public Object[] bestDirection(HashMap<Direction, Feature> moves, List<Direction> illegalDirections) {
 		
 		Direction bestDirection;
 		Object[] result = new Object[2];
-		
 		
 		if(!moves.entrySet().isEmpty()) {
 			
@@ -191,5 +197,10 @@ public class Stateless {
 		}
 			
 		return result;
+	}
+	
+	// Getter for the value of count
+	public int getCount() {
+		return count;
 	}
 }
