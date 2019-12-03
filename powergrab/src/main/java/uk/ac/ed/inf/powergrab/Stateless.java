@@ -39,7 +39,7 @@ public class Stateless extends Drone{
 			HashMap<Direction, Feature> validDirections = new HashMap<Direction, Feature>();
 			List<Direction> illegalDirections = new ArrayList<>();
 			
-			//Write latitude and longitude to the file
+			//Write the old latitude and longitude to the file
 			txtWriter.print(position.latitude + " ");
 			txtWriter.print(position.longitude + " ");
 			
@@ -135,6 +135,7 @@ public class Stateless extends Drone{
 			moveCount++;	
 			
 		}	
+		txtWriter.close();
 		map.writeFlightPath(flightPath, fileName);
 	}
 	

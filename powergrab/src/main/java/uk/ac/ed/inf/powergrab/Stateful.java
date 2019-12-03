@@ -39,10 +39,6 @@ public class Stateful extends Drone {
 			Direction closestDirection = null;
 			boolean arrived = false;
 			
-			//Write latitude and longitude to the file
-			txtWriter.print(position.latitude + " ");
-			txtWriter.print(position.longitude + " ");
-			
 			// While we haven't yet arrived at our charging station
 			while(!arrived) {
 				
@@ -157,12 +153,17 @@ public class Stateful extends Drone {
 			// Take the closestDirection to endMove to complete the move
 			endMove(closestDirection);
 		}
+		txtWriter.close();
 		map.writeFlightPath(flightPath, fileName);
 	}
 	
 	// Helper function for everything we need to do once we have decided on a move to make
 	public void endMove(Direction closestDirection) {
-	
+		
+		//Write the old latitude and longitude to the file
+		txtWriter.print(position.latitude + " ");
+		txtWriter.print(position.longitude + " ");
+		
 		Position bestPosition = position.nextPosition(closestDirection);
 		
 		// Write direction of move to the file
@@ -172,7 +173,7 @@ public class Stateful extends Drone {
 		position.latitude = bestPosition.latitude;
 		position.longitude = bestPosition.longitude;
 		
-		// Write new latitude and longitude to the file
+		// Write the new latitude and longitude to the file
 		txtWriter.print(position.latitude + " ");
 		txtWriter.print(position.longitude + " ");
 		

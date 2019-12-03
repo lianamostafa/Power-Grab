@@ -44,7 +44,6 @@ public class App {
 	    	if(droneType.equals("stateless")) {
 	        	Stateless drone = new Stateless(mapString, startingLat, startingLong, seedNum, position, fileName);
 	        	drone.Move();
-	        	drone.txtWriter.close();
 	        	System.out.print("...Finished");
 	        	System.out.println("\nTotal moves: " + drone.getCount());
 	        	System.out.println("Total coins: " + drone.coins.getCoins());
@@ -54,7 +53,6 @@ public class App {
 	    		// SeedNum is not necessary for this implementation of Stateful
 	        	Stateful drone = new Stateful(mapString, startingLat, startingLong, position, fileName);
 	        	drone.Move();
-	        	drone.txtWriter.close();
 	        	System.out.print("...Finished");
 	        	System.out.println("\nTotal moves: " + drone.getCount()); 
 	        	System.out.println("Total coins: " + drone.coins.getCoins());
