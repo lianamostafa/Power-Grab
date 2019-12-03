@@ -1,52 +1,25 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import com.mapbox.geojson.Feature;
 
-public class Stateless {
+public class Stateless extends Drone{
 	
-	// Current number of moves implemented (MAX 250)
-	private int moveCount;
 	public int seedNum;
-	public double latitude;
-	public double longitude;
-	
-	public String mapString;
-	public String fileName;
-	public PrintWriter txtWriter;
-	
-	public Position position;
-	public Battery battery = new Battery();
-	public Coins coins = new Coins();
-	public Map map;
 	public RandomDirectionGenerator rdg;
 	
 	public List<Position> flightPath = new ArrayList<>();
 
 	// Initialise stateless drone
 	public Stateless(String mapString, double latitude, double longitude, int seedNum, Position position, String fileName) {
-		this.mapString = mapString;
-		this.latitude = latitude;
-		this.longitude = longitude;
+		super(mapString, latitude, longitude, position, fileName);
 		this.seedNum = seedNum;
-		this.position = position;
-		this.fileName = fileName;
 		
 		map = new Map(mapString);
-		
-		try {
-			txtWriter = new PrintWriter(fileName+".txt");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		
 		rdg  = new RandomDirectionGenerator(seedNum);
-
 	}
 	
 	// Getter for the value of moveCount
@@ -61,7 +34,7 @@ public class Stateless {
 		
 		Direction[] directions = Direction.values();
 
-		while(moveCount <= 250 && battery.getCharge() >= 1.25) {
+		while(moveCount < 250 && battery.getCharge() >= 1.25) {
 			
 			HashMap<Direction, Feature> validDirections = new HashMap<Direction, Feature>();
 			List<Direction> illegalDirections = new ArrayList<>();
@@ -151,6 +124,7 @@ public class Stateless {
 			
 			// Write new value of battery after move to file
 			txtWriter.print(battery.getCharge() + " ");
+			
 			// Print new line on file 
 			txtWriter.println("");
 			

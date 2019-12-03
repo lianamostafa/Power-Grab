@@ -7,7 +7,7 @@ package uk.ac.ed.inf.powergrab;
 public class Battery {
 	
 	// Charge starts at 250.0
-	private double charge = 250.0;
+	private double charge = 250;
 	
 	
 	public void chargeBattery(double amount) {

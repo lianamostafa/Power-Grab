@@ -1,46 +1,18 @@
 package uk.ac.ed.inf.powergrab;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import com.mapbox.geojson.Feature;
 
-public class Stateful{
+public class Stateful extends Drone {
 	
-	// Current number of moves implemented (MAX 250)
-	private int moveCount;
-	public double latitude;
-	public double longitude;
-	
-	public String mapString;
-	public String fileName;
-	public PrintWriter txtWriter;
-	
-	public Position position;
-	public Battery battery = new Battery();
-	public Coins coins = new Coins();
-	public Map map;
-	
-	public List<Position> flightPath = new ArrayList<>();
+
 	public List<List<Double>> flightCoordinates = new ArrayList<>();
 
 	public Stateful(String mapString, double latitude, double longitude, Position position, String fileName) {
-		this.mapString = mapString;
-		this.latitude = latitude;
-		this.longitude = longitude;
-		this.position = position;
-		this.fileName = fileName;
-		
-		map = new Map(mapString);
-		
-		try {
-			txtWriter = new PrintWriter(fileName+".txt");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		super(mapString, latitude, longitude, position, fileName);
 	}
 	
 	public void Move() {
@@ -57,7 +29,7 @@ public class Stateful{
 		 * when there are no more charging stations to visit.
 		 */
 
-		while(moveCount <= 250 && battery.getCharge() >= 1.25 && !map.goodFeatures.isEmpty()) {
+		while(moveCount < 250 && battery.getCharge() >= 1.25 && !map.goodFeatures.isEmpty()) {
 			
 			List<Direction> illegalDirections = new ArrayList<>();
 			HashMap<Direction, Double> distances = new HashMap<>();
@@ -73,11 +45,6 @@ public class Stateful{
 			
 			// While we haven't yet arrived at our charging station
 			while(!arrived) {
-				
-				// If we hit 250 moves, exit loop
-				if(moveCount == 250) {
-					break;
-				}
 				
 				/* Check the distance between the position at each direction
 				 * and the charging station we are trying to visit.
@@ -276,10 +243,5 @@ public class Stateful{
 			return closestFeatures.get(0);
 		}
 		
-	}
-	
-	// Getter for the value of moveCount
-	public int getCount() {
-		return moveCount;
 	}
 }
