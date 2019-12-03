@@ -1,21 +1,18 @@
 package uk.ac.ed.inf.powergrab;
 
+/* This is a simple class to manage and keep track of
+ * our drone's current battery levels.
+ */
+
 public class Battery {
 	
 	// Charge starts at 250.0
 	private double charge = 250.0;
 	
-	/* Here I have made the assumption that 250.0 is the max charge for our battery
-	 * as it is unrealistic to assume that the drone can have unlimited power.
-	 */
 	
 	public void chargeBattery(double amount) {
 		charge += amount;
 	}
-	
-	/* I have decided to take a similar approach with discharging the battery
-	 * as you cannot have a negative percentage of battery.
-	 */
 	
 	public void consumeBattery(double amount) {
 		charge -= amount;

@@ -4,8 +4,9 @@ public class App {
 	
     public static void main(String[] args){
     	
+    	// Throw an exception if we have an incorrect number of arguments
     	if(args.length != 7) {
-    		throw new IllegalArgumentException("You should input the following 7 arguments: day, month, year, starting latitude, sttarting longitude, seed number, drone type.");
+    		throw new IllegalArgumentException("You should input the following 7 arguments: day, month, year, starting latitude, starting longitude, seed number, drone type.");
     	} else {
     		String day = args[0];
 	        String month = args[1];
@@ -36,6 +37,10 @@ public class App {
 	    	String fileName = createFileString(year, month, day, droneType);
 	    	String mapString = createMapString(year, month, day);
 	    	
+	    	/* I have chosen to output the total moves, coins and battery after each drone is finished
+	    	 * so that these outputs can be monitored as necessary.
+	    	 */
+	    	
 	    	if(droneType.equals("stateless")) {
 	        	Stateless drone = new Stateless(mapString, startingLat, startingLong, seedNum, position, fileName);
 	        	drone.Move();
@@ -48,7 +53,7 @@ public class App {
 	        	Stateful drone = new Stateful(mapString, startingLat, startingLong, position, fileName);
 	        	drone.Move();
 	        	System.out.print("...Finished");
-	        	System.out.println("\nTotal moves: " + drone.getCount());
+	        	System.out.println("\nTotal moves: " + drone.getCount()); 
 	        	System.out.println("Total coins: " + drone.coins.getCoins());
 	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	    	}
@@ -57,6 +62,7 @@ public class App {
     	}
     }
    
+    // Helper functions to create the necessary strings for our url and file name
     public static String createMapString(String year, String month, String day) {
     	return String.format("http://homepages.inf.ed.ac.uk/stg/powergrab/%s/%s/%s/powergrabmap.geojson", year, month, day);
     }

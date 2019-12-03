@@ -11,7 +11,7 @@ import com.mapbox.geojson.Feature;
 public class Stateless {
 	
 	// Current number of moves implemented (MAX 250)
-	private int count;
+	private int moveCount;
 	public int seedNum;
 	public double latitude;
 	public double longitude;
@@ -21,13 +21,14 @@ public class Stateless {
 	public PrintWriter txtWriter;
 	
 	public Position position;
-	public List<Position> flightPath = new ArrayList<>();
 	public Battery battery = new Battery();
 	public Coins coins = new Coins();
 	public Map map;
 	public RandomDirectionGenerator rdg;
-
 	
+	public List<Position> flightPath = new ArrayList<>();
+
+	// Initialise stateless drone
 	public Stateless(String mapString, double latitude, double longitude, int seedNum, Position position, String fileName) {
 		this.mapString = mapString;
 		this.latitude = latitude;
@@ -48,13 +49,19 @@ public class Stateless {
 
 	}
 	
+	// Getter for the value of moveCount
+	public int getCount() {
+		return moveCount;
+	}
+	
 	public void Move() {
 		
 		// Add base position to flightPath
 		flightPath.add(new Position(position.latitude, position.longitude));
+		
 		Direction[] directions = Direction.values();
 
-		while(count <= 250 && battery.getCharge() >= 1.25) {
+		while(moveCount <= 250 && battery.getCharge() >= 1.25) {
 			
 			HashMap<Direction, Feature> validDirections = new HashMap<Direction, Feature>();
 			List<Direction> illegalDirections = new ArrayList<>();
@@ -62,6 +69,10 @@ public class Stateless {
 			//Write latitude and longitude to the file
 			txtWriter.print(position.latitude + " ");
 			txtWriter.print(position.longitude + " ");
+			
+			/* Check the next position for each direction to filter out
+			 * any bad directions (those not in the play area or that lead to a bad node).
+			 */
 			
 			for(Direction d : directions) {
 				
@@ -73,10 +84,19 @@ public class Stateless {
 				}
 				
 				for(Feature f : map.features){
-
+					
+					/*  If the feature leading in this direction has already been visited,
+					 *  skip to the next iteration.
+					 */
+					
 					if(map.getPower(f) == 0.0 && map.getCoins(f) == 0.0) {
 						continue;
 					}
+					
+					/* If a feature is in range, check the marker symbol. If it's a
+					 * "lighthouse" add to to validDirections, otherwise add it to
+					 * illegalDirections.
+					 */
 					
 					if(next.inRange(next.getDist(map.getCoordinates(f)))) {
 						if(map.getMarkerSymbol(f).equals("lighthouse")) {
@@ -90,8 +110,12 @@ public class Stateless {
 				}
 			}
 			
+			/* Once we have filtered out all the illegal moves, pick our best move
+			 * using the function bestDirection.
+			 */
 			Object[] bestMove = bestDirection(validDirections, illegalDirections);
 			
+			// Get the associated feature and new position
 			Feature bestFeature = (Feature) bestMove[1];
 			Position bestPosition = position.nextPosition((Direction) bestMove[0]);
 			
@@ -106,7 +130,11 @@ public class Stateless {
 			txtWriter.print(position.latitude + " ");
 			txtWriter.print(position.longitude + " ");
 			
-			battery.consumeBattery(1.25);
+			battery.consumeBattery(1.25); // Drone has moved, consume battery
+			
+			/* If we have arrived at a charging station, consume all coins
+			 * and charge from the station (and reset these values to 0).
+			 */
 			
 			if(bestFeature != null) {
 				battery.chargeBattery(map.getPower(bestFeature));
@@ -126,26 +154,29 @@ public class Stateless {
 			// Print new line on file 
 			txtWriter.println("");
 			
-			
 			// Add new position to flightPath
 			flightPath.add(new Position(position.latitude, position.longitude));
 			
-			count++;	
+			// Move complete, increment moveCount
+			moveCount++;	
 			
 		}	
 		map.writeFlightPath(flightPath, fileName);
 	}
 	
-	/* 
-	 * Best direction takes in a HashMap of the current options for valid directions (with their corresponding features),
-	 * and decides which direction is the best to go for (in terms of feature value).
-	 * 
-	 * If the current list of valid directions have no features associated with them,
-	 * a random direction out of the 16 possible is then chosen 
-	 * (making sure that said direction does not appear on our list of illegal directions).
-	 */
 	
 	public Object[] bestDirection(HashMap<Direction, Feature> moves, List<Direction> illegalDirections) {
+		
+		/* Best direction takes in a HashMap of the current options for valid directions (with their corresponding features),
+		 * and decides which direction is the best to go for (in terms of feature value).
+		 * 
+		 * If the current list of valid directions have no features associated with them,
+		 * a random direction out of the 16 possible is then chosen 
+		 * (making sure that said direction does not appear on our list of illegal directions).
+		 * 
+		 * We return an Object array of size 2 with the best direction, and the associated feature 
+		 * we can visit (if there is one)
+		 */
 		
 		Direction bestDirection;
 		Object[] result = new Object[2];
@@ -155,17 +186,28 @@ public class Stateless {
 			Set<Direction> dirKeySet = moves.keySet();
 			List<Direction> dirKeyList = new ArrayList<>(dirKeySet);
 			
+			// Initialise with the first key/value in moves
 			bestDirection = dirKeyList.get(0);
 			Feature bestFeature = moves.get(bestDirection);
 			double bestCoins = map.getCoins(bestFeature);
 			double bestPower = map.getPower(bestFeature);
-
+			
+			// Loop through the rest of moves 
 			for(int i = 1; i < moves.size(); i++) {
 				Direction currentDirection = dirKeyList.get(i);
 				Feature currentFeature = moves.get(currentDirection);
 				if(currentFeature != null) {
 					double currentCoins = map.getCoins(currentFeature);
 					double currentPower = map.getPower(currentFeature);
+					
+					/*  If we find that the current charge is less than 20 (which
+					 *  is highly unlikely as we avoid any bad charging stations), 
+					 *  we prioritise returning a feature which will give us a higher 
+					 *  charge over coins.
+					 *  
+					 *  Otherwise, we will usually be prioritising returning the feature
+					 *  which will maximise our intake of coins.
+					 */
 					
 					if(battery.getCharge() < 20) {
 						if(currentPower > bestPower) {
@@ -187,20 +229,27 @@ public class Stateless {
 		} else {
 			
 			bestDirection = rdg.getRandomDirection();
+
 			if(illegalDirections.contains(bestDirection)) {
+				
+				/*  Keep picking the next random direction if the one given
+				 *  is on our list of illegal directions.
+				 */
+				
 				while(illegalDirections.contains(bestDirection)) {
 					bestDirection = rdg.getRandomDirection();
 				}
 			}
+			
+			/* As there is no feature associated with the random direction,
+			 * we can simply set the second value in our array as null.
+			 */
+			
 			result[0] = bestDirection;
-			result[1] = null;
+			result[1] = null; 
 		}
 			
 		return result;
 	}
-	
-	// Getter for the value of count
-	public int getCount() {
-		return count;
-	}
+
 }

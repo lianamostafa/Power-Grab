@@ -25,9 +25,8 @@ public class Position {
 		/* The longitude and latitude were calculated using the basic trigonometric formulas
 		 * r*cos(angle) and r*sin(angle) respectively; 
 		 * before being added to the old longitude and latitude
-		 */
-		
-		/*  The angles were then converted to radians
+		 *
+		 * The angles were then converted to radians
 		 */
 		
 		new_longitude = longitude + r*(Math.cos(Math.toRadians(direction_angle)));
@@ -36,15 +35,23 @@ public class Position {
 		return new Position(new_latitude, new_longitude);
 	}
 	
-	// Function to get the Euclidean distance between the current position and a feature
+	/* Function to get the Euclidean distance between the current position and a feature
+	 * (providing the coordinates of said feature).
+	 */
+	
 	public double getDist(List<Double> nextCoords) {
+		
 		double nextLong = nextCoords.get(0);
 		double nextLat = nextCoords.get(1);
-		double dist = Math.sqrt(((nextLong-longitude)*(nextLong-longitude))+((nextLat-latitude)*(nextLat-latitude)));
+		
+		double longs = nextLong-longitude;
+		double lats = nextLat-latitude;
+		double dist = Math.sqrt(((longs)*(longs))+((lats)*(lats)));
+		
 		return dist;
 	}
 	
-	// Function to check if the current position is in range of a feature
+	// Function to check if the given distance is less than or equal to 0.00025
 	public boolean inRange(Double dist) {
 		if(dist <= 0.00025) {
 			return true;

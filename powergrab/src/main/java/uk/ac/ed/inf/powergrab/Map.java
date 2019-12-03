@@ -26,7 +26,9 @@ public class Map {
 	private URL mapURL;
 	private HttpURLConnection conn;
 	private String mapSource;
+	
 	public List<Feature> features;
+	// These are only used in our stateful drone
 	public List<Feature> goodFeatures = new ArrayList<>();;
 	public List<Feature> badFeatures = new ArrayList<>();;
 	
@@ -123,6 +125,8 @@ public class Map {
 	public String getID(Feature f) {
 		return (f.getProperty("id")).getAsString();
 	}
+	
+	// Function to write the output of a drone's flight to its associated files
 
 	public void writeFlightPath(List<Position> flightPath, String fileName) {
 		
@@ -142,6 +146,14 @@ public class Map {
 			
 			newJSON.put("type", "FeatureCollection");
 			newJSON.put("date-generated", oldJSON.get("date-generated"));
+			
+			/*  I had some issues with writing the features to our file
+			 *  using geoJson's methods, so I found that carefully
+			 *  rewriting each feature as a standard JSON Object solved any issues.
+			 *  
+			 *  This may not be the most efficient, but can hopefully be addressed at 
+			 *  a later stage in production.
+			 */
 			
 			for(Feature f : features) {
 				JSONObject currentFeature = new JSONObject();

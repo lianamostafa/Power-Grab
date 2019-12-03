@@ -28,6 +28,5 @@ public enum Direction{
 	public double getAngle() {
 		return angle;
 	}
-	
-	
+
 }
