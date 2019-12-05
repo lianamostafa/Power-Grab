@@ -183,8 +183,11 @@ public class Stateful extends Drone {
 		
 		// Write new value of battery after move to file
 		txtWriter.print(battery.getCharge() + " ");
-		// Print new line on file 
-		txtWriter.println("");
+		
+		if(moveCount != 249) {
+			// Print new line on file 
+			txtWriter.println("");
+		}
 		
 		// Add new position to flightPath
 		flightPath.add(new Position(position.latitude, position.longitude));
