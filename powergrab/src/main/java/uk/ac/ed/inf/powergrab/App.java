@@ -16,7 +16,6 @@ public class App {
 	        int seedNum = Integer.parseInt(args[5]);
 	        String droneType = args[6].toLowerCase();
 	        
-	        System.out.print("Start...");
 	    	Position position = new Position(startingLat, startingLong);
 	    	
 	    	// Illegal argument errors
@@ -44,8 +43,7 @@ public class App {
 	    	if(droneType.equals("stateless")) {
 	        	Stateless drone = new Stateless(mapString, startingLat, startingLong, seedNum, position, fileName);
 	        	drone.Move();
-	        	System.out.print("...Finished");
-	        	System.out.println("\nTotal moves: " + drone.getCount());
+	        	System.out.println("Total moves: " + drone.getCount());
 	        	System.out.println("Total coins: " + drone.coins.getCoins());
 	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	        	
@@ -53,8 +51,7 @@ public class App {
 	    		// SeedNum is not necessary for this implementation of Stateful
 	        	Stateful drone = new Stateful(mapString, startingLat, startingLong, position, fileName);
 	        	drone.Move();
-	        	System.out.print("...Finished");
-	        	System.out.println("\nTotal moves: " + drone.getCount()); 
+	        	System.out.println("Total moves: " + drone.getCount()); 
 	        	System.out.println("Total coins: " + drone.coins.getCoins());
 	        	System.out.println("Total battery: " + drone.battery.getCharge() + "\n");
 	    	}

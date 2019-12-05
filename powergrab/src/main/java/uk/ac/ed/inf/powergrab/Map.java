@@ -55,7 +55,7 @@ public class Map {
 	}
 	
 	// Create a connection labelled 'conn' from a given URL
-	public HttpURLConnection mapConn(String mapString) {
+	private HttpURLConnection mapConn(String mapString) {
 		try {
 			mapURL = new URL(mapString);
 		} catch (MalformedURLException e) {
@@ -72,7 +72,7 @@ public class Map {
 	}
 	
 	// Function to convert an InputStream object into a String
-	public String streamToString(InputStream is) {
+	private String streamToString(InputStream is) {
 		
 		/* Using a combination of Buffered Reader and StringBuilder,		 
 		 * we get each line from our Input Stream and append it to our 
@@ -102,11 +102,6 @@ public class Map {
 	}
 	
 	public Float getCoins(Feature f) {
-		
-		if(f.getProperty("coins") == null) {
-			throw new NullPointerException("Feature " + f + " does not exist.");
-			
-		}
 		return (f.getProperty("coins")).getAsFloat();
 	}
 	

@@ -7,7 +7,6 @@ import java.util.List;
 import com.mapbox.geojson.Feature;
 
 public class Stateful extends Drone {
-	
 
 	public List<List<Double>> flightCoordinates = new ArrayList<>();
 
@@ -48,7 +47,7 @@ public class Stateful extends Drone {
 				 * our HashMap "distances".
 				 * 
 				 * Filter out any bad directions, similar to how we did it
-				 * in stateful.
+				 * in Stateless.
 				 */
 				
 				for(Direction currentDirection : directions) {
@@ -158,7 +157,7 @@ public class Stateful extends Drone {
 	}
 	
 	// Helper function for everything we need to do once we have decided on a move to make
-	public void endMove(Direction closestDirection) {
+	private void endMove(Direction closestDirection) {
 		
 		//Write the old latitude and longitude to the file
 		txtWriter.print(position.latitude + " ");
@@ -198,7 +197,7 @@ public class Stateful extends Drone {
 		
 	}
 	
-	public Feature getClosestFeature(List<Feature> currentFeatures) {
+	private Feature getClosestFeature(List<Feature> currentFeatures) {
 		
 		/* This function takes in the current list of unvisited features
 		 * and returns whichever one is closest to our drone's current position.

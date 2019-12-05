@@ -52,7 +52,7 @@ public class Position {
 	}
 	
 	// Function to check if the given distance is less than or equal to 0.00025
-	public boolean inRange(Double dist) {
+	public boolean inRange(double dist) {
 		if(dist <= 0.00025) {
 			return true;
 		} else {

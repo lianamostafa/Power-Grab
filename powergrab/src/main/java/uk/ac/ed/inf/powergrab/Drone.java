@@ -20,9 +20,8 @@ public class Drone {
 	public Battery battery = new Battery();
 	public Coins coins = new Coins();
 	public Map map;
+	
 	public Direction[] directions;
-	
-	
 	public List<Position> flightPath = new ArrayList<>();
 	
 	public Drone(String mapString, double latitude, double longitude, Position position, String fileName) {
@@ -45,4 +44,5 @@ public class Drone {
 	public int getCount() {
 		return moveCount;
 	}
+
 }

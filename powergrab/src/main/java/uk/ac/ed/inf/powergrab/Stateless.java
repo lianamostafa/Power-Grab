@@ -9,22 +9,14 @@ import com.mapbox.geojson.Feature;
 public class Stateless extends Drone{
 	
 	public int seedNum;
-	public RandomDirectionGenerator rdg;
-	
+	private RandomDirectionGenerator rdg;
 	public List<Position> flightPath = new ArrayList<>();
 
 	// Initialise stateless drone
 	public Stateless(String mapString, double latitude, double longitude, int seedNum, Position position, String fileName) {
 		super(mapString, latitude, longitude, position, fileName);
 		this.seedNum = seedNum;
-		
-		map = new Map(mapString);
 		rdg  = new RandomDirectionGenerator(seedNum);
-	}
-	
-	// Getter for the value of moveCount
-	public int getCount() {
-		return moveCount;
 	}
 	
 	public void Move() {
@@ -140,7 +132,7 @@ public class Stateless extends Drone{
 	}
 	
 	
-	public Object[] bestDirection(HashMap<Direction, Feature> moves, List<Direction> illegalDirections) {
+	private Object[] bestDirection(HashMap<Direction, Feature> moves, List<Direction> illegalDirections) {
 		
 		/* Best direction takes in a HashMap of the current options for valid directions (with their corresponding features),
 		 * and decides which direction is the best to go for (in terms of feature value).
