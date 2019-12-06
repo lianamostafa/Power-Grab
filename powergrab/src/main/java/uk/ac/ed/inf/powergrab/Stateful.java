@@ -31,24 +31,39 @@ public class Stateful extends Drone {
 		while(moveCount < 250 && battery.getCharge() >= 1.25 && !map.goodFeatures.isEmpty()) {
 			
 			List<Direction> illegalDirections = new ArrayList<>();
-			HashMap<Direction, Double> distances = new HashMap<>();
+			HashMap<Direction, Double> goodDistances = new HashMap<>();
+			HashMap<Direction, Double> badDistances = new HashMap<>();
 			
 			// Get closest available charging station we can visit
 			Feature closestFeature = getClosestFeature(map.goodFeatures);
 			Direction closestDirection = null;
 			boolean arrived = false;
 			
+			int travelCount = 0;
+			boolean unreachableStation = false;
 			// While we haven't yet arrived at our charging station
 			while(!arrived) {
 				
 				/* Check the distance between the position at each direction
 				 * and the charging station we are trying to visit.
 				 * Then, put the direction and the associated distance in
-				 * our HashMap "distances".
+				 * our HashMap "goodDistances".
 				 * 
 				 * Filter out any bad directions, similar to how we did it
 				 * in Stateless.
+				 * 
+				 * If the drone is stuck in a loop (for 30 moves) trying to reach
+				 * a particular station, that station is likely unreachable.
+				 * It is then removed from our list of closest features, and 
+				 * moves onto the next station.
+				 * 
 				 */
+				
+				if(travelCount == 40) {
+					map.goodFeatures.remove(closestFeature);
+					unreachableStation = true;
+					break;
+				}
 				
 				for(Direction currentDirection : directions) {
 					
@@ -75,22 +90,25 @@ public class Stateful extends Drone {
 					}
 					
 					/* If our next position will take us in range of any bad charging stations,
-					 * add the associated direction to our illegalDirections list;
+					 * add the associated direction to our illegalDirections list; 
+					 * and to our badDistances HashMap along with the distance
 					 */
 					
 					for(Feature bf : map.badFeatures) {
-						if(next.inRange(next.getDist(map.getCoordinates(bf)))) {
+						double badDist = next.getDist(map.getCoordinates(bf));
+						if(next.inRange(badDist)) {
 							illegalDirections.add(currentDirection);
+							badDistances.put(currentDirection, badDist);
 							break;
 						}
 					}
 					
 					/* If the current direction is not in illegalDirections,
-					 * add the direction and associated distance to our distances HashMap
+					 * add the direction and associated distance to our goodDistances HashMap
 					 */
 					
 					if(!illegalDirections.contains(currentDirection)) {
-						distances.put(currentDirection, currentDistance);
+						goodDistances.put(currentDirection, currentDistance);
 						
 						/* If the next position brings us in range of the desired
 						 * good charging station, set arrived to true and break
@@ -109,6 +127,16 @@ public class Stateful extends Drone {
 					}
 				}
 				
+				// If we have reached the max number of moves, break
+				if(moveCount == 249) {
+					break;
+				}
+				
+				// Can't reach the current station, break out of while loop
+				if(unreachableStation) {
+					break;
+				}
+				
 				// If we have arrived, break out of the while loop.
 				if(arrived) {
 					break;
@@ -119,36 +147,54 @@ public class Stateful extends Drone {
 				 * 
 				 * Find the direction which will bring us closest to the station
 				 * we want to visit, by getting the minimum distance from our
-				 * HashMap distances.
+				 * HashMap goodDistances.
+				 * 
+				 * If there are no good directions, pick the first bad direction that
+				 * won't take us off the playing map.
 				 */
-				Double closestDistance = Collections.min(distances.values());
-				List<Direction> keys = new ArrayList<>(distances.keySet());
 				
-				for(int i = 0; i < distances.size(); i++) {
-					Direction currentDirection = keys.get(i);
-					if(distances.get(currentDirection) == closestDistance) {
-						closestDirection = currentDirection;
-						break;
+				if(illegalDirections.size() == 16) {
+					List<Direction> badKeys = new ArrayList<>(badDistances.keySet());
+					closestDirection = badKeys.get(0);
+				} else {
+					Double closestDistance = Collections.min(goodDistances.values());
+					List<Direction> goodKeys = new ArrayList<>(goodDistances.keySet());
+					
+					for(int i = 0; i < goodDistances.size(); i++) {
+						Direction currentDirection = goodKeys.get(i);
+						if(goodDistances.get(currentDirection) == closestDistance) {
+							closestDirection = currentDirection;
+							break;
+						}
 					}
 				}
 				
-				// Clear illegalDirections and distances for the next iteration
-				illegalDirections.clear();
-				distances.clear();
+				// Clear illegalDirections and goodDistances for the next iteration
+				illegalDirections = new ArrayList<>();
+				goodDistances = new HashMap<>();
 				
 				// Take the closestDirection to endMove to complete the move
 				endMove(closestDirection);
+				
+				travelCount++;
 			}
 			
-			// What to do once we've arrived at the feature we want
-			battery.chargeBattery(map.getPower(closestFeature));
-			coins.addCoins(map.getCoins(closestFeature));
-			int bestFeatureIndex = map.features.indexOf(closestFeature);
-			map.features.get(bestFeatureIndex).removeProperty("coins");
-			map.features.get(bestFeatureIndex).removeProperty("power");
-			map.features.get(bestFeatureIndex).addNumberProperty("coins", 0.0);
-			map.features.get(bestFeatureIndex).addNumberProperty("power", 0.0);
+			// Can't reach the current station, try moving towards the next one
+			if(unreachableStation) {
+				continue;
+			}
 			
+			if(arrived) {
+				// What to do once we've arrived at the feature we want
+				battery.chargeBattery(map.getPower(closestFeature));
+				coins.addCoins(map.getCoins(closestFeature));
+				int bestFeatureIndex = map.features.indexOf(closestFeature);
+				map.features.get(bestFeatureIndex).removeProperty("coins");
+				map.features.get(bestFeatureIndex).removeProperty("power");
+				map.features.get(bestFeatureIndex).addNumberProperty("coins", 0.0);
+				map.features.get(bestFeatureIndex).addNumberProperty("power", 0.0);
+			}
+
 			// Take the closestDirection to endMove to complete the move
 			endMove(closestDirection);
 		}
@@ -160,29 +206,29 @@ public class Stateful extends Drone {
 	private void endMove(Direction closestDirection) {
 		
 		//Write the old latitude and longitude to the file
-		txtWriter.print(position.latitude + " ");
-		txtWriter.print(position.longitude + " ");
+		txtWriter.print(position.latitude + ",");
+		txtWriter.print(position.longitude + ",");
 		
 		Position bestPosition = position.nextPosition(closestDirection);
 		
 		// Write direction of move to the file
-		txtWriter.print(closestDirection + " ");
+		txtWriter.print(closestDirection + ",");
 		
 		// Set our latitude and longitude to match those found in out bestPosition
 		position.latitude = bestPosition.latitude;
 		position.longitude = bestPosition.longitude;
 		
 		// Write the new latitude and longitude to the file
-		txtWriter.print(position.latitude + " ");
-		txtWriter.print(position.longitude + " ");
+		txtWriter.print(position.latitude + ",");
+		txtWriter.print(position.longitude + ",");
 		
 		battery.consumeBattery(1.25);
 		
 		// Write new value of coins after move to file
-		txtWriter.print(coins.getCoins() + " ");
+		txtWriter.print(coins.getCoins() + ",");
 		
 		// Write new value of battery after move to file
-		txtWriter.print(battery.getCharge() + " ");
+		txtWriter.print(battery.getCharge());
 		
 		if(moveCount != 249) {
 			// Print new line on file 
@@ -206,15 +252,15 @@ public class Stateful extends Drone {
 		 * and returns whichever one is closest to our drone's current position.
 		 */
 		
-		HashMap<Feature, Double> distances = new HashMap<>();
+		HashMap<Feature, Double> goodDistances = new HashMap<>();
 		
 		for(int i = 0; i < currentFeatures.size(); i++) {
 			double currentDistance = position.getDist(map.getCoordinates(currentFeatures.get(i)));
 			Feature currentFeature = currentFeatures.get(i);
-			distances.put(currentFeature, currentDistance);
+			goodDistances.put(currentFeature, currentDistance);
 		}
 		
-		Double closestDistance = Collections.min(distances.values());
+		Double closestDistance = Collections.min(goodDistances.values());
 		
 		/* If there are any duplicate features that are the same min distance away,
 		 * pick the one that will give us the highest number of coins.
@@ -223,7 +269,7 @@ public class Stateful extends Drone {
 		List<Feature> closestFeatures = new ArrayList<>();
 		
 		for(Feature f : currentFeatures) {
-			if(distances.get(f) == closestDistance){
+			if(goodDistances.get(f) == closestDistance){
 				closestFeatures.add(f);
 			}
 		}

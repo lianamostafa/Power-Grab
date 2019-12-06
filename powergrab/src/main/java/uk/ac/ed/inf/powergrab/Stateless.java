@@ -29,7 +29,9 @@ public class Stateless extends Drone{
 		while(moveCount < 250 && battery.getCharge() >= 1.25) {
 			
 			HashMap<Direction, Feature> validDirections = new HashMap<Direction, Feature>();
+			HashMap<Direction, Feature> badDirections = new HashMap<Direction, Feature>();
 			List<Direction> illegalDirections = new ArrayList<>();
+			
 			
 			//Write the old latitude and longitude to the file
 			txtWriter.print(position.latitude + " ");
@@ -69,31 +71,44 @@ public class Stateless extends Drone{
 							break;
 						} else {
 							illegalDirections.add(d);
+							badDirections.put(d, f);
 							break;
 						}
 					}
 				}
 			}
 			
+			Object[] bestMove;
+			
 			/* Once we have filtered out all the illegal moves, pick our best move
 			 * using the function bestDirection.
+			 *
+			 * If the drone is surrounded by bad charging stations,
+			 * it picks whichever one that will cause the least harm.
 			 */
-			Object[] bestMove = bestDirection(validDirections, illegalDirections);
+			
+			if(illegalDirections.size() == 16) {
+				illegalDirections.removeAll(badDirections.keySet());
+				bestMove = bestDirection(badDirections, illegalDirections);
+			} else {
+				bestMove = bestDirection(validDirections, illegalDirections);
+			}
+			 
 			
 			// Get the associated feature and new position
 			Feature bestFeature = (Feature) bestMove[1];
 			Position bestPosition = position.nextPosition((Direction) bestMove[0]);
 			
 			// Write direction of move to the file
-			txtWriter.print(bestMove[0] + " ");
+			txtWriter.print(bestMove[0] + ",");
 			
 			// Set our latitude and longitude to match those found in out bestPosition
 			position.latitude = bestPosition.latitude;
 			position.longitude = bestPosition.longitude;
 			
 			// Write new latitude and longitude to the file
-			txtWriter.print(position.latitude + " ");
-			txtWriter.print(position.longitude + " ");
+			txtWriter.print(position.latitude + ",");
+			txtWriter.print(position.longitude + ",");
 			
 			battery.consumeBattery(1.25); // Drone has moved, consume battery
 			
@@ -112,10 +127,10 @@ public class Stateless extends Drone{
 			}
 
 			// Write new value of coins after move to file
-			txtWriter.print(coins.getCoins() + " ");
+			txtWriter.print(coins.getCoins() + ",");
 			
 			// Write new value of battery after move to file
-			txtWriter.print(battery.getCharge() + " ");
+			txtWriter.print(battery.getCharge());
 			
 			if(moveCount != 249) {
 				// Print new line on file 
@@ -198,7 +213,7 @@ public class Stateless extends Drone{
 		} else {
 			
 			bestDirection = rdg.getRandomDirection();
-
+			
 			if(illegalDirections.contains(bestDirection)) {
 				
 				/*  Keep picking the next random direction if the one given
